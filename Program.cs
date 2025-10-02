@@ -46,7 +46,6 @@ namespace LabWork
     {
         static void Main(string[] args)
         {
-            // Додаємо підтримку української мови в консолі
             Console.OutputEncoding = Encoding.UTF8;
             Console.InputEncoding = Encoding.UTF8;
 
