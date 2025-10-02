@@ -45,18 +45,35 @@ namespace LabWork
     {
         static void Main(string[] args)
         {
-            int n = 3;
+            Console.Write("Введіть кількість трикутників: ");
+            int n;
+            while (!int.TryParse(Console.ReadLine(), out n) || n <= 0)
+            {
+                Console.Write("Введіть коректне додатнє число: ");
+            }
+
             Triangle[] triangles = new Triangle[n];
-            triangles[0] = new Triangle(0, 0, 4, 0, 0, 3);
-            triangles[1] = new Triangle(1, 1, 5, 1, 1, 4);
-            triangles[2] = new Triangle(0, 0, 2, 0, 0, 2);
+            Random rnd = new Random();
+
+            for (int i = 0; i < n; i++)
+            {
+                double ax = rnd.Next(-50, 51);
+                double ay = rnd.Next(-50, 51);
+                double bx = rnd.Next(-50, 51);
+                double by = rnd.Next(-50, 51);
+                double cx = rnd.Next(-50, 51);
+                double cy = rnd.Next(-50, 51);
+
+                triangles[i] = new Triangle(ax, ay, bx, by, cx, cy);
+                Console.WriteLine($"Трикутник {i + 1}: A({ax},{ay}), B({bx},{by}), C({cx},{cy})");
+            }
 
             double maxArea = 0;
             int maxIndex = -1;
             for (int i = 0; i < n; i++)
             {
                 double area = triangles[i].Area();
-                Console.WriteLine($"Triangle {i + 1} area: {area}");
+                Console.WriteLine($"Площа трикутника {i + 1}: {area}");
                 if (area > maxArea)
                 {
                     maxArea = area;
@@ -64,7 +81,7 @@ namespace LabWork
                 }
             }
 
-            Console.WriteLine($"Triangle with max area is #{maxIndex + 1} with area {maxArea}");
+            Console.WriteLine($"Трикутник з найбільшою площею: #{maxIndex + 1}, площа = {maxArea}");
 
             // Демонстрація роботи Garbage Collector
             triangles = null;
