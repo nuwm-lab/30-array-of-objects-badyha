@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace LabWork
 {
@@ -45,6 +46,10 @@ namespace LabWork
     {
         static void Main(string[] args)
         {
+            // Додаємо підтримку української мови в консолі
+            Console.OutputEncoding = Encoding.UTF8;
+            Console.InputEncoding = Encoding.UTF8;
+
             Console.Write("Введіть кількість трикутників: ");
             int n;
             while (!int.TryParse(Console.ReadLine(), out n) || n <= 0)
@@ -83,7 +88,6 @@ namespace LabWork
 
             Console.WriteLine($"Трикутник з найбільшою площею: #{maxIndex + 1}, площа = {maxArea}");
 
-            // Демонстрація роботи Garbage Collector
             triangles = null;
             GC.Collect();
             GC.WaitForPendingFinalizers();
