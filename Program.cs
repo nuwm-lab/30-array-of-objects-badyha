@@ -9,43 +9,35 @@ namespace LabWork
     // Відео-інструкції щодо роботи з github можна переглянути 
     // за посиланням https://www.youtube.com/@ViktorZhukovskyy/videos 
 
-    // Simple DTO for returning index and area of the triangle with max area
-    class Result
-    {
-        public int Index { get; }
-        public double Area { get; }
-
-        public Result(int index, double area)
-        {
-            Index = index;
-            Area = area;
-        }
-    }
+    // Simple record for returning index and area of the triangle with max area
+    public record Result(int Index, double Area);
     
-    class Triangle
+    // Small immutable point record with PascalCase members
+    public record Point(double X, double Y);
+
+    public class Triangle
     {
-        // Make coordinates readonly to prevent external modification
-        public readonly (double x, double y) A;
-        public readonly (double x, double y) B;
-        public readonly (double x, double y) C;
+        // Prefer exposing read-only properties rather than public fields
+        public Point A { get; }
+        public Point B { get; }
+        public Point C { get; }
 
         public Triangle(double ax, double ay, double bx, double by, double cx, double cy)
         {
-            A = (ax, ay);
-            B = (bx, by);
-            C = (cx, cy);
-            // Avoid logging in constructor. If needed use Debug.WriteLine outside.
+            A = new Point(ax, ay);
+            B = new Point(bx, by);
+            C = new Point(cx, cy);
         }
 
-        public double Area()
-        {
-            // Формула площі трикутника за координатами
-            return Math.Abs(
-                (A.x * (B.y - C.y) +
-                 B.x * (C.y - A.y) +
-                 C.x * (A.y - B.y)) / 2.0
+        // Area as a property; computed on demand
+        public double Area => Math.Abs(
+                (A.X * (B.Y - C.Y) +
+                 B.X * (C.Y - A.Y) +
+                 C.X * (A.Y - B.Y)) / 2.0
             );
-        }
+
+        // True if points are colinear (area == 0)
+        public bool IsDegenerate => Area == 0.0;
     }
 
     class Program
@@ -57,26 +49,29 @@ namespace LabWork
 
             Console.Write("Введіть кількість трикутників: ");
             int n;
-            while (!int.TryParse(Console.ReadLine(), out n) || n <= 0)
+            string line;
+            while ((line = Console.ReadLine()) == null || !int.TryParse(line, out n) || n <= 0)
             {
                 Console.Write("Введіть коректне додатнє число: ");
             }
 
             Triangle[] triangles = new Triangle[n];
-            Random rnd = new Random();
+            var rnd = new Random();
+
+            const double Range = 50.0; // coordinates will be generated in [-Range, Range]
 
             for (int i = 0; i < n; i++)
             {
-                // Use NextDouble scaled to [-50,50] to allow fractional coordinates
-                double ax = (rnd.NextDouble() * 100.0) - 50.0;
-                double ay = (rnd.NextDouble() * 100.0) - 50.0;
-                double bx = (rnd.NextDouble() * 100.0) - 50.0;
-                double by = (rnd.NextDouble() * 100.0) - 50.0;
-                double cx = (rnd.NextDouble() * 100.0) - 50.0;
-                double cy = (rnd.NextDouble() * 100.0) - 50.0;
+                // Use NextDouble scaled to [-Range,Range] to allow fractional coordinates
+                double ax = (rnd.NextDouble() * (2 * Range)) - Range;
+                double ay = (rnd.NextDouble() * (2 * Range)) - Range;
+                double bx = (rnd.NextDouble() * (2 * Range)) - Range;
+                double by = (rnd.NextDouble() * (2 * Range)) - Range;
+                double cx = (rnd.NextDouble() * (2 * Range)) - Range;
+                double cy = (rnd.NextDouble() * (2 * Range)) - Range;
 
                 triangles[i] = new Triangle(ax, ay, bx, by, cx, cy);
-                Console.WriteLine($"Трикутник {i + 1}: A({ax:F2} ; {ay:F2}), B({bx:F2},{by:F2}), C({cx:F2} ; {cy:F2})");
+                Console.WriteLine($"Трикутник {i + 1}: A({ax:F2},{ay:F2}), B({bx:F2},{by:F2}), C({cx:F2},{cy:F2})");
             }
 
             // Find triangle with maximum area using a separate method
@@ -100,12 +95,12 @@ namespace LabWork
                 return null;
 
             // Initialize from first triangle to guarantee a valid index
-            double maxArea = triangles[0].Area();
+            double maxArea = triangles[0].Area;
             int maxIndex = 0;
 
             for (int i = 1; i < triangles.Length; i++)
             {
-                double area = triangles[i].Area();
+                double area = triangles[i].Area;
                 // Optionally, write per-triangle logging outside of this method
                 if (area > maxArea)
                 {
