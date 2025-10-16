@@ -9,35 +9,37 @@ namespace LabWork
     // Відео-інструкції щодо роботи з github можна переглянути 
     // за посиланням https://www.youtube.com/@ViktorZhukovskyy/videos 
 
-    // Simple record for returning index and area of the triangle with max area
-    public record Result(int Index, double Area);
+    class Result
+    { 
+    // TODO: do it!
+    }
     
-    // Small immutable point record with PascalCase members
-    public record Point(double X, double Y);
-
-    public class Triangle
+    class Triangle
     {
-        // Prefer exposing read-only properties rather than public fields
-        public Point A { get; }
-        public Point B { get; }
-        public Point C { get; }
+        public (double x, double y) A, B, C;
 
         public Triangle(double ax, double ay, double bx, double by, double cx, double cy)
         {
-            A = new Point(ax, ay);
-            B = new Point(bx, by);
-            C = new Point(cx, cy);
+            A = (ax, ay);
+            B = (bx, by);
+            C = (cx, cy);
+            Console.WriteLine("Triangle created.");
         }
 
-        // Area as a property; computed on demand
-        public double Area => Math.Abs(
-                (A.X * (B.Y - C.Y) +
-                 B.X * (C.Y - A.Y) +
-                 C.X * (A.Y - B.Y)) / 2.0
-            );
+        ~Triangle()
+        {
+            Console.WriteLine("Triangle destroyed.");
+        }
 
-        // True if points are colinear (area == 0)
-        public bool IsDegenerate => Area == 0.0;
+        public double Area()
+        {
+            // Формула площі трикутника за координатами
+            return Math.Abs(
+                (A.x * (B.y - C.y) +
+                 B.x * (C.y - A.y) +
+                 C.x * (A.y - B.y)) / 2.0
+            );
+        }
     }
 
     class Program
@@ -49,59 +51,33 @@ namespace LabWork
 
             Console.Write("Введіть кількість трикутників: ");
             int n;
-            string line;
-            while ((line = Console.ReadLine()) == null || !int.TryParse(line, out n) || n <= 0)
+            while (!int.TryParse(Console.ReadLine(), out n) || n <= 0)
             {
                 Console.Write("Введіть коректне додатнє число: ");
             }
 
             Triangle[] triangles = new Triangle[n];
-            var rnd = new Random();
-
-            const double Range = 50.0; // coordinates will be generated in [-Range, Range]
+            Random rnd = new Random();
 
             for (int i = 0; i < n; i++)
             {
-                // Use NextDouble scaled to [-Range,Range] to allow fractional coordinates
-                double ax = (rnd.NextDouble() * (2 * Range)) - Range;
-                double ay = (rnd.NextDouble() * (2 * Range)) - Range;
-                double bx = (rnd.NextDouble() * (2 * Range)) - Range;
-                double by = (rnd.NextDouble() * (2 * Range)) - Range;
-                double cx = (rnd.NextDouble() * (2 * Range)) - Range;
-                double cy = (rnd.NextDouble() * (2 * Range)) - Range;
+                double ax = rnd.Next(-50, 51);
+                double ay = rnd.Next(-50, 51);
+                double bx = rnd.Next(-50, 51);
+                double by = rnd.Next(-50, 51);
+                double cx = rnd.Next(-50, 51);
+                double cy = rnd.Next(-50, 51);
 
                 triangles[i] = new Triangle(ax, ay, bx, by, cx, cy);
-                Console.WriteLine($"Трикутник {i + 1}: A({ax:F2},{ay:F2}), B({bx:F2},{by:F2}), C({cx:F2},{cy:F2})");
+                Console.WriteLine($"Трикутник {i + 1}: A({ax};{ay}), B({bx};{by}), C({cx};{cy})");
             }
 
-            // Find triangle with maximum area using a separate method
-            Result result = FindMaxArea(triangles);
-
-            if (result != null && result.Index >= 0)
+            double maxArea = 0;
+            int maxIndex = -1;
+            for (int i = 0; i < n; i++)
             {
-                Console.WriteLine($"Трикутник з найбільшою площею: #{result.Index + 1}, площа = {result.Area:F2}");
-            }
-            else
-            {
-                Console.WriteLine("Не вдалось визначити трикутник з найбільшою площею.");
-            }
-        }
-
-        // Returns the index and area of the triangle with the maximum area.
-        // Guarantees correct behavior for any non-empty array.
-        public static Result FindMaxArea(Triangle[] triangles)
-        {
-            if (triangles == null || triangles.Length == 0)
-                return null;
-
-            // Initialize from first triangle to guarantee a valid index
-            double maxArea = triangles[0].Area;
-            int maxIndex = 0;
-
-            for (int i = 1; i < triangles.Length; i++)
-            {
-                double area = triangles[i].Area;
-                // Optionally, write per-triangle logging outside of this method
+                double area = triangles[i].Area();
+                Console.WriteLine($"Площа трикутника {i + 1}: {area}");
                 if (area > maxArea)
                 {
                     maxArea = area;
@@ -109,7 +85,11 @@ namespace LabWork
                 }
             }
 
-            return new Result(maxIndex, maxArea);
+            Console.WriteLine($"Трикутник з найбільшою площею: #{maxIndex + 1}, площа = {maxArea}");
+
+            triangles = null;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
     }
 }
