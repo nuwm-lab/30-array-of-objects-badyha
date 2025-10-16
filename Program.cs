@@ -9,26 +9,32 @@ namespace LabWork
     // Відео-інструкції щодо роботи з github можна переглянути 
     // за посиланням https://www.youtube.com/@ViktorZhukovskyy/videos 
 
+    // Simple DTO for returning index and area of the triangle with max area
     class Result
-    { 
-    // TODO: do it!
+    {
+        public int Index { get; }
+        public double Area { get; }
+
+        public Result(int index, double area)
+        {
+            Index = index;
+            Area = area;
+        }
     }
     
     class Triangle
     {
-        public (double x, double y) A, B, C;
+        // Make coordinates readonly to prevent external modification
+        public readonly (double x, double y) A;
+        public readonly (double x, double y) B;
+        public readonly (double x, double y) C;
 
         public Triangle(double ax, double ay, double bx, double by, double cx, double cy)
         {
             A = (ax, ay);
             B = (bx, by);
             C = (cx, cy);
-            Console.WriteLine("Triangle created.");
-        }
-
-        ~Triangle()
-        {
-            Console.WriteLine("Triangle destroyed.");
+            // Avoid logging in constructor. If needed use Debug.WriteLine outside.
         }
 
         public double Area()
@@ -61,23 +67,46 @@ namespace LabWork
 
             for (int i = 0; i < n; i++)
             {
-                double ax = rnd.Next(-50, 51);
-                double ay = rnd.Next(-50, 51);
-                double bx = rnd.Next(-50, 51);
-                double by = rnd.Next(-50, 51);
-                double cx = rnd.Next(-50, 51);
-                double cy = rnd.Next(-50, 51);
+                // Use NextDouble scaled to [-50,50] to allow fractional coordinates
+                double ax = (rnd.NextDouble() * 100.0) - 50.0;
+                double ay = (rnd.NextDouble() * 100.0) - 50.0;
+                double bx = (rnd.NextDouble() * 100.0) - 50.0;
+                double by = (rnd.NextDouble() * 100.0) - 50.0;
+                double cx = (rnd.NextDouble() * 100.0) - 50.0;
+                double cy = (rnd.NextDouble() * 100.0) - 50.0;
 
                 triangles[i] = new Triangle(ax, ay, bx, by, cx, cy);
-                Console.WriteLine($"Трикутник {i + 1}: A({ax},{ay}), B({bx},{by}), C({cx},{cy})");
+                Console.WriteLine($"Трикутник {i + 1}: A({ax:F2} ; {ay:F2}), B({bx:F2},{by:F2}), C({cx:F2} ; {cy:F2})");
             }
 
-            double maxArea = 0;
-            int maxIndex = -1;
-            for (int i = 0; i < n; i++)
+            // Find triangle with maximum area using a separate method
+            Result result = FindMaxArea(triangles);
+
+            if (result != null && result.Index >= 0)
+            {
+                Console.WriteLine($"Трикутник з найбільшою площею: #{result.Index + 1}, площа = {result.Area:F2}");
+            }
+            else
+            {
+                Console.WriteLine("Не вдалось визначити трикутник з найбільшою площею.");
+            }
+        }
+
+        // Returns the index and area of the triangle with the maximum area.
+        // Guarantees correct behavior for any non-empty array.
+        public static Result FindMaxArea(Triangle[] triangles)
+        {
+            if (triangles == null || triangles.Length == 0)
+                return null;
+
+            // Initialize from first triangle to guarantee a valid index
+            double maxArea = triangles[0].Area();
+            int maxIndex = 0;
+
+            for (int i = 1; i < triangles.Length; i++)
             {
                 double area = triangles[i].Area();
-                Console.WriteLine($"Площа трикутника {i + 1}: {area}");
+                // Optionally, write per-triangle logging outside of this method
                 if (area > maxArea)
                 {
                     maxArea = area;
@@ -85,11 +114,7 @@ namespace LabWork
                 }
             }
 
-            Console.WriteLine($"Трикутник з найбільшою площею: #{maxIndex + 1}, площа = {maxArea}");
-
-            triangles = null;
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            return new Result(maxIndex, maxArea);
         }
     }
 }
