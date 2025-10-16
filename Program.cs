@@ -9,37 +9,51 @@ namespace LabWork
     // Відео-інструкції щодо роботи з github можна переглянути 
     // за посиланням https://www.youtube.com/@ViktorZhukovskyy/videos 
 
-    class Result
-    { 
-    // TODO: do it!
+    // Result holds index and area of the triangle with maximum area
+    public class Result
+    {
+        public int Index { get; }
+        public double Area { get; }
+
+        public Result(int index, double area)
+        {
+            Index = index;
+            Area = area;
+        }
     }
     
-    class Triangle
+    public class Triangle
     {
-        public (double x, double y) A, B, C;
+        // Expose coordinates via read-only properties (encapsulation)
+        public (double X, double Y) A { get; }
+        public (double X, double Y) B { get; }
+        public (double X, double Y) C { get; }
 
         public Triangle(double ax, double ay, double bx, double by, double cx, double cy)
         {
             A = (ax, ay);
             B = (bx, by);
             C = (cx, cy);
-            Console.WriteLine("Triangle created.");
+            // Avoid logging in constructor; use external logging if needed
         }
 
-        ~Triangle()
+        // Area as a property (computed on demand)
+        public double Area
         {
-            Console.WriteLine("Triangle destroyed.");
+            get
+            {
+                return Math.Abs(
+                    (A.X * (B.Y - C.Y) +
+                     B.X * (C.Y - A.Y) +
+                     C.X * (A.Y - B.Y)) / 2.0
+                );
+            }
         }
 
-        public double Area()
-        {
-            // Формула площі трикутника за координатами
-            return Math.Abs(
-                (A.x * (B.y - C.y) +
-                 B.x * (C.y - A.y) +
-                 C.x * (A.y - B.y)) / 2.0
-            );
-        }
+        // Use epsilon for floating-point comparison
+        private const double Epsilon = 1e-9;
+
+        public bool IsDegenerate => Math.Abs(Area) < Epsilon;
     }
 
     class Program
@@ -70,14 +84,49 @@ namespace LabWork
 
                 triangles[i] = new Triangle(ax, ay, bx, by, cx, cy);
                 Console.WriteLine($"Трикутник {i + 1}: A({ax};{ay}), B({bx};{by}), C({cx};{cy})");
+                Console.WriteLine($"Площа трикутника {i + 1}: {triangles[i].Area:F2}{(triangles[i].IsDegenerate ? " (вироджений)" : string.Empty)}");
             }
 
-            double maxArea = 0;
-            int maxIndex = -1;
-            for (int i = 0; i < n; i++)
+            var result = FindMaxArea(triangles);
+            if (result == null)
             {
-                double area = triangles[i].Area();
-                Console.WriteLine($"Площа трикутника {i + 1}: {area}");
+                Console.WriteLine("Не вдалося знайти трикутник з ненульовою площею.");
+            }
+            else
+            {
+                Console.WriteLine($"Трикутник з найбільшою площею: #{result.Index + 1}, площа = {result.Area:F2}");
+            }
+        }
+
+        // Finds the triangle with the maximum area (skipping degenerate triangles).
+        // Returns null if input is null/empty or no non-degenerate triangle exists.
+        public static Result FindMaxArea(Triangle[] triangles)
+        {
+            if (triangles == null || triangles.Length == 0)
+                return null;
+
+            int start = -1;
+            for (int i = 0; i < triangles.Length; i++)
+            {
+                if (!triangles[i].IsDegenerate)
+                {
+                    start = i;
+                    break;
+                }
+            }
+
+            if (start == -1)
+                return null;
+
+            double maxArea = triangles[start].Area;
+            int maxIndex = start;
+
+            for (int i = start + 1; i < triangles.Length; i++)
+            {
+                if (triangles[i].IsDegenerate)
+                    continue;
+
+                double area = triangles[i].Area;
                 if (area > maxArea)
                 {
                     maxArea = area;
@@ -85,11 +134,7 @@ namespace LabWork
                 }
             }
 
-            Console.WriteLine($"Трикутник з найбільшою площею: #{maxIndex + 1}, площа = {maxArea}");
-
-            triangles = null;
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            return new Result(maxIndex, maxArea);
         }
     }
 }
